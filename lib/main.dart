@@ -16,17 +16,17 @@ class DocDiffApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'DocDiff',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
-        useMaterial3: true,
-      ),
-      home: BlocProvider(
-        create: (_) =>
-            ComparisonCubit(PackageScanner(), ComparisonService(HashService())),
-        child: const HomeView(),
+    return BlocProvider(
+      create: (context) =>
+          ComparisonCubit(PackageScanner(), ComparisonService(HashService())),
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'DocDiff',
+        theme: ThemeData(
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.indigo),
+          useMaterial3: true,
+        ),
+        home: const HomeView(),
       ),
     );
   }

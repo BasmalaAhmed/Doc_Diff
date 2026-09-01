@@ -20,9 +20,15 @@ class PackageScanner {
     return Future.wait(
       files.map((file) async {
         final stat = await file.stat();
+
+        final relativePath = file.path
+            .substring(directory.path.length)
+            .replaceFirst(RegExp(r'^[\\/]'), '');
+
         return PackageFile(
           name: file.uri.pathSegments.last,
           path: file.path,
+          relativePath: relativePath,
           size: stat.size,
         );
       }),

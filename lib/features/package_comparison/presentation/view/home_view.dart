@@ -1,8 +1,9 @@
 import 'package:doc_diff/core/services/file_picker_service.dart';
-import 'package:doc_diff/features/package_comparison/data/models/package_file.dart';
-import 'package:doc_diff/features/package_comparison/data/services/package_scanner.dart';
+import 'package:doc_diff/features/package_comparison/presentation/manager/comparison_cubit/comparison_cubit.dart';
+import 'package:doc_diff/features/package_comparison/presentation/manager/comparison_cubit/comparison_state.dart';
 import 'package:doc_diff/features/package_comparison/presentation/widgets/package_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 class HomeView extends StatefulWidget {
   const HomeView({super.key});
@@ -13,10 +14,6 @@ class HomeView extends StatefulWidget {
 
 class _HomeViewState extends State<HomeView> {
   final FilePickerService _filePickerService = FilePickerService();
-  final PackageScanner _packageScanner = PackageScanner();
-
-  List<PackageFile> _originalFiles = [];
-  List<PackageFile> _updatedFiles = [];
 
   String? _originalPackagePath;
   String? _updatedPackagePath;
@@ -26,11 +23,8 @@ class _HomeViewState extends State<HomeView> {
 
     if (path == null) return;
 
-    final files = await _packageScanner.scan(path);
-
     setState(() {
       _originalPackagePath = path;
-      _originalFiles = files;
     });
   }
 
@@ -39,11 +33,8 @@ class _HomeViewState extends State<HomeView> {
 
     if (path == null) return;
 
-    final files = await _packageScanner.scan(path);
-
     setState(() {
       _updatedPackagePath = path;
-      _updatedFiles = files;
     });
   }
 
@@ -72,7 +63,6 @@ class _HomeViewState extends State<HomeView> {
                         icon: Icons.folder_outlined,
                         selectedPath: _originalPackagePath,
                         onSelect: _pickOriginalPackage,
-                        fileCount: _originalFiles.length,
                       ),
                     ),
                     const SizedBox(width: 24),
@@ -83,11 +73,68 @@ class _HomeViewState extends State<HomeView> {
                         icon: Icons.folder_copy_outlined,
                         selectedPath: _updatedPackagePath,
                         onSelect: _pickUpdatedPackage,
-                        fileCount: _updatedFiles.length,
                       ),
                     ),
                   ],
                 ),
+              ),
+
+              const SizedBox(height: 32),
+
+              SizedBox(
+                height: 50,
+                width: 350,
+                child: FilledButton.icon(
+                  onPressed: () {
+                    if (_originalPackagePath == null ||
+                        _updatedPackagePath == null) {
+                      return;
+                    }
+
+                    context.read<ComparisonCubit>().comparePackages(
+                      originalPackagePath: _originalPackagePath!,
+                      updatedPackagePath: _updatedPackagePath!,
+                    );
+                  },
+                  icon: const Icon(Icons.compare_arrows),
+                  label: const Text('Compare Packages'),
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              BlocBuilder<ComparisonCubit, ComparisonState>(
+                builder: (context, state) {
+                  if (state is ComparisonLoading) {
+                    return const Column(
+                      children: [
+                        CircularProgressIndicator(),
+                        SizedBox(height: 12),
+                        Text('Comparing packages...'),
+                      ],
+                    );
+                  }
+                  if (state is ComparisonSuccess) {
+                    final result = state.result;
+
+                    return Text(
+                      '${result.unchangedCount} unchanged • '
+                      '${result.modifiedCount} modified • '
+                      '${result.addedCount} added • '
+                      '${result.removedCount} removed ',
+                    );
+                  }
+
+                  if (state is ComparisonFailure) {
+                    return Text(
+                      state.message,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
               ),
             ],
           ),

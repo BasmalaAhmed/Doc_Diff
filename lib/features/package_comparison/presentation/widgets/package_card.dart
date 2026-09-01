@@ -8,7 +8,6 @@ class PackageCard extends StatelessWidget {
     required this.icon,
     this.selectedPath,
     required this.onSelect,
-    required this.fileCount,
   });
 
   final String title;
@@ -16,7 +15,6 @@ class PackageCard extends StatelessWidget {
   final IconData icon;
   final String? selectedPath;
   final VoidCallback onSelect;
-  final int fileCount;
 
   @override
   Widget build(BuildContext context) {
@@ -39,11 +37,6 @@ class PackageCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$fileCount PDF files found',
-                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 OutlinedButton.icon(

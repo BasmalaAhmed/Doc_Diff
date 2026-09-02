@@ -1,3 +1,4 @@
+import 'package:doc_diff/constants.dart';
 import 'package:doc_diff/features/package_comparison/data/models/file_comparison.dart';
 import 'package:doc_diff/features/package_comparison/data/models/file_comparison_status.dart';
 import 'package:flutter/material.dart';
@@ -25,9 +26,32 @@ class ComparisonFileTile extends StatelessWidget {
     };
   }
 
+  Color get statusColor {
+    return switch (comparison.status) {
+      FileComparisonStatus.unchanged => kUnchangedColor,
+      FileComparisonStatus.modified => kModifiedColor,
+      FileComparisonStatus.added => kAddedColor,
+      FileComparisonStatus.removed => kRemovedColor,
+    };
+  }
+
+  Color get statusBorderColor {
+    return switch (comparison.status) {
+      FileComparisonStatus.unchanged => kUnchangedAccent,
+      FileComparisonStatus.modified => kModifiedAccent,
+      FileComparisonStatus.added => kAddedAccent,
+      FileComparisonStatus.removed => kRemovedAccent,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
+      color: statusColor,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: statusBorderColor,),
+        borderRadius: BorderRadius.circular(12)
+      ),
       child: ListTile(
         leading: Icon(statusIcon, size: 28),
         title: Text(

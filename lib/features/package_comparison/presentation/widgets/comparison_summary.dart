@@ -1,3 +1,4 @@
+import 'package:doc_diff/constants.dart';
 import 'package:doc_diff/features/package_comparison/data/models/comparison_result.dart';
 import 'package:doc_diff/features/package_comparison/data/models/file_comparison_status.dart';
 import 'package:flutter/material.dart';
@@ -10,25 +11,51 @@ class ComparisonSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      (label : 'Unchanged', count : result.unchangedCount, status : FileComparisonStatus.unchanged,),
-      (label : 'Modified', count : result.modifiedCount, status : FileComparisonStatus.modified,),
-      (label : 'Added', count : result.addedCount, status : FileComparisonStatus.added,),
-      (label : 'Removed', count : result.removedCount, status : FileComparisonStatus.removed,),
-
+      (
+        label: 'Unchanged',
+        count: result.unchangedCount,
+        status: FileComparisonStatus.unchanged,
+      ),
+      (
+        label: 'Modified',
+        count: result.modifiedCount,
+        status: FileComparisonStatus.modified,
+      ),
+      (
+        label: 'Added',
+        count: result.addedCount,
+        status: FileComparisonStatus.added,
+      ),
+      (
+        label: 'Removed',
+        count: result.removedCount,
+        status: FileComparisonStatus.removed,
+      ),
     ];
     return Row(
       children: [
-        for(var i = 0; i < items.length; i++)...[
-          Expanded(child: SummaryCard(label: items[i].label, count: items[i].count, status: items[i].status,),),
-          if(i < items.length - 1) const SizedBox(width: 16,),
-        ]
+        for (var i = 0; i < items.length; i++) ...[
+          Expanded(
+            child: SummaryCard(
+              label: items[i].label,
+              count: items[i].count,
+              status: items[i].status,
+            ),
+          ),
+          if (i < items.length - 1) const SizedBox(width: 16),
+        ],
       ],
     );
   }
 }
 
 class SummaryCard extends StatelessWidget {
-  const SummaryCard({super.key, required this.label, required this.count, required this.status});
+  const SummaryCard({
+    super.key,
+    required this.label,
+    required this.count,
+    required this.status,
+  });
 
   final String label;
   final int count;
@@ -43,23 +70,50 @@ class SummaryCard extends StatelessWidget {
     };
   }
 
+  Color get statusColor {
+    return switch (status) {
+      FileComparisonStatus.unchanged => kUnchangedColor,
+      FileComparisonStatus.modified => kModifiedColor,
+      FileComparisonStatus.added => kAddedColor,
+      FileComparisonStatus.removed => kRemovedColor,
+    };
+  }
+
+  Color get statusBorderColor {
+    return switch (status) {
+      FileComparisonStatus.unchanged => kUnchangedAccent,
+      FileComparisonStatus.modified => kModifiedAccent,
+      FileComparisonStatus.added => kAddedAccent,
+      FileComparisonStatus.removed => kRemovedAccent,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
-      child: Padding(padding: const EdgeInsets.all(20),
-      child: Row(
-        children: [
-          Icon(icon , size: 32,),
-          const SizedBox(width: 16,),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('$count', style: Theme.of(context).textTheme.headlineMedium,),
-              Text(label),
-            ],
-          ),
-        ],
+      color: statusColor,
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: statusBorderColor),
+        borderRadius: BorderRadius.circular(12)
       ),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Icon(icon, size: 32),
+            const SizedBox(width: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '$count',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                Text(label),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

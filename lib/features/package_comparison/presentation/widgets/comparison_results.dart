@@ -55,6 +55,7 @@ class _ComparisonResultsState extends State<ComparisonResults> {
         ComparisonSummary(result: widget.result),
         const SizedBox(height: 16),
         ComparisonFilterSelector(
+          result: widget.result,
           selectedFilter: _selectedFilter,
           onFilterChanged: (filter) {
             setState(() {
@@ -64,12 +65,21 @@ class _ComparisonResultsState extends State<ComparisonResults> {
         ),
         const SizedBox(height: 24),
         Expanded(
-          child: ListView.builder(
-            itemCount: _filteredFiles.length,
-            itemBuilder: (context, index) {
-              return ComparisonFileTile(comparison: _filteredFiles[index]);
-            },
-          ),
+          child: _filteredFiles.isEmpty
+              ? Center(
+                  child: Text(
+                    'No ${_selectedFilter.name} files found.',
+                    style: Theme.of(context).textTheme.bodyLarge,
+                  ),
+                )
+              : ListView.builder(
+                  itemCount: _filteredFiles.length,
+                  itemBuilder: (context, index) {
+                    return ComparisonFileTile(
+                      comparison: _filteredFiles[index],
+                    );
+                  },
+                ),
         ),
       ],
     );

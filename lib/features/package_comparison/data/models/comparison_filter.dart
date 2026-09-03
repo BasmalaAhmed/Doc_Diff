@@ -1,0 +1,1 @@
+enum ComparisonFilter { all, modified, added, removed, unchanged }

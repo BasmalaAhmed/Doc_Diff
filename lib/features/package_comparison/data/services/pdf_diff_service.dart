@@ -20,28 +20,55 @@ class PdfDiffService {
 
     final updatedPages = await _pdfRenderService.renderPages(updatedPdfPath);
 
-    final pageCount = originalPages.length < updatedPages.length
+    final pageCount = originalPages.length > updatedPages.length
         ? originalPages.length
         : updatedPages.length;
 
     final pages = <PdfPageDiff>[];
 
     for (var i = 0; i < pageCount; i++) {
-      final diff = _comparePage(
-        originalPage: originalPages[i],
-        updatedPage: updatedPages[i],
-      );
+      final hasOriginalPage = i < originalPages.length;
+      final hasUpdatedPage = i < updatedPages.length;
 
-      pages.add(
+      if (hasOriginalPage && hasUpdatedPage) {
+        final diff = _comparePage(
+          originalPage: originalPages[i],
+          updatedPage: updatedPages[i],
+        );
+
+        pages.add(
+          PdfPageDiff(
+            pageNumber: i + 1,
+            originalPage: originalPages[i],
+            updatedPage: updatedPages[i],
+            diffPage: diff.diffImage,
+            diffPixels: diff.diffPixels,
+            status: diff.status,
+          ),
+        );
+      } else if (hasOriginalPage) {
+        pages.add(
         PdfPageDiff(
           pageNumber: i + 1,
           originalPage: originalPages[i],
-          updatedPage: updatedPages[i],
-          diffPage: diff.diffImage,
-          diffPixels: diff.diffPixels,
-          status: diff.status,
+          updatedPage: null,
+          diffPage: null,
+          diffPixels: 0,
+          status: PdfPageDiffStatus.removed,
         ),
       );
+      } else {
+        pages.add(
+        PdfPageDiff(
+          pageNumber: i + 1,
+          originalPage: null,
+          updatedPage: updatedPages[i],
+          diffPage: null,
+          diffPixels: 0,
+          status: PdfPageDiffStatus.added,
+        ),
+      );
+      }
     }
 
     return PdfDiffResult(pages: pages);
@@ -51,7 +78,9 @@ class PdfDiffService {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-    final originalImage = img.decodeImage(originalPage)?.convert(numChannels: 4);
+    final originalImage = img
+        .decodeImage(originalPage)
+        ?.convert(numChannels: 4);
     final updatedImage = img.decodeImage(updatedPage)?.convert(numChannels: 4);
 
     if (originalImage == null || updatedImage == null) {

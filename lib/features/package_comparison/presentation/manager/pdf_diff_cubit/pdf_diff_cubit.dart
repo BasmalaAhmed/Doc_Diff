@@ -20,13 +20,9 @@ class PdfDiffCubit extends Cubit<PdfDiffState> {
       );
 
       emit(PdfDiffSuccess(result));
-    } catch (e, stackTrace) {
-      print('PDF DIFF ERROR: $e');
-
-      print(stackTrace);
+    } catch (e) {
       emit(
-        PdfDiffFailure(e.toString()),
-        // PdfDiffFailure('Something went wrong while comparing the PDF files.'),
+        PdfDiffFailure('Something went wrong while comparing the PDF files.'),
       );
     }
   }

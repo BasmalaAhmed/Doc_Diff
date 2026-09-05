@@ -17,8 +17,10 @@ class DocDiffApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          ComparisonCubit(PackageScanner(), ComparisonService(HashService())),
+      create: (context) => ComparisonCubit(
+        PackageScanner(),
+        ComparisonService(HashService()),
+      ),
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'DocDiff',

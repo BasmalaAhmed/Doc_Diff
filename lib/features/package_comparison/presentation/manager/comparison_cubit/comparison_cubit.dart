@@ -37,4 +37,5 @@ class ComparisonCubit extends Cubit<ComparisonState> {
 
     }
   }
+
 }

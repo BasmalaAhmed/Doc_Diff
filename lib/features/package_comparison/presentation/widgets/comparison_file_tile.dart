@@ -1,6 +1,7 @@
 import 'package:doc_diff/constants.dart';
 import 'package:doc_diff/features/package_comparison/data/models/file_comparison.dart';
 import 'package:doc_diff/features/package_comparison/data/models/file_comparison_status.dart';
+import 'package:doc_diff/features/package_comparison/presentation/view/pdf_diff_view.dart';
 import 'package:flutter/material.dart';
 
 class ComparisonFileTile extends StatelessWidget {
@@ -49,10 +50,24 @@ class ComparisonFileTile extends StatelessWidget {
     return Card(
       color: statusColor,
       shape: RoundedRectangleBorder(
-        side: BorderSide(color: statusBorderColor,),
-        borderRadius: BorderRadius.circular(12)
+        side: BorderSide(color: statusBorderColor),
+        borderRadius: BorderRadius.circular(12),
       ),
       child: ListTile(
+        onTap:
+          canComparePdf
+              ? () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => PdfDiffView(
+                        originalPdfPath: comparison.originalFile!.path,
+                        updatedPdfPath: comparison.updatedFile!.path,
+                      ),
+                    ),
+                  );
+                }
+              : null,
+        
         leading: Icon(statusIcon, size: 28),
         title: Text(
           comparison.relativePath,
@@ -63,5 +78,17 @@ class ComparisonFileTile extends StatelessWidget {
         trailing: const Icon(Icons.chevron_right),
       ),
     );
+  }
+
+  bool get canComparePdf {
+    final originalPath = comparison.originalFile?.path;
+    final updatedPath = comparison.updatedFile?.path;
+
+    if (originalPath == null || updatedPath == null) {
+      return false;
+    }
+
+    return originalPath.toLowerCase().endsWith('.pdf') &&
+        updatedPath.toLowerCase().endsWith('.pdf');
   }
 }

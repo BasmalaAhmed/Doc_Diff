@@ -51,8 +51,8 @@ class PdfDiffService {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-    final originalImage = img.decodeImage(originalPage);
-    final updatedImage = img.decodeImage(updatedPage);
+    final originalImage = img.decodeImage(originalPage)?.convert(numChannels: 4);
+    final updatedImage = img.decodeImage(updatedPage)?.convert(numChannels: 4);
 
     if (originalImage == null || updatedImage == null) {
       return _PageComparison(
@@ -65,6 +65,7 @@ class PdfDiffService {
     final diffImage = img.Image(
       width: originalImage.width,
       height: originalImage.height,
+      numChannels: 4,
     );
 
     final diffPixels = pixelmatch(

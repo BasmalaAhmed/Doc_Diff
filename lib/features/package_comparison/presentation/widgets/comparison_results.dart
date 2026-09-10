@@ -8,9 +8,14 @@ import 'package:doc_diff/features/package_comparison/presentation/widgets/compar
 import 'package:flutter/material.dart';
 
 class ComparisonResults extends StatefulWidget {
-  const ComparisonResults({super.key, required this.result});
+  const ComparisonResults({
+    super.key,
+    required this.result,
+    required this.searchQuery,
+  });
 
   final ComparisonResult result;
+  final String searchQuery;
 
   @override
   State<ComparisonResults> createState() => _ComparisonResultsState();
@@ -20,23 +25,29 @@ class _ComparisonResultsState extends State<ComparisonResults> {
   ComparisonFilter _selectedFilter = ComparisonFilter.all;
 
   List<FileComparison> get _filteredFiles {
+    final query = widget.searchQuery.toLowerCase().trim();
+
+    final searchFilteredFiles = widget.result.files.where((file) {
+      return file.relativePath.toLowerCase().contains(query);
+    }).toList();
+
     switch (_selectedFilter) {
       case ComparisonFilter.all:
-        return widget.result.files;
+        return searchFilteredFiles;
       case ComparisonFilter.modified:
-        return widget.result.files
+        return searchFilteredFiles
             .where((file) => file.status == FileComparisonStatus.modified)
             .toList();
       case ComparisonFilter.added:
-        return widget.result.files
+        return searchFilteredFiles
             .where((file) => file.status == FileComparisonStatus.added)
             .toList();
       case ComparisonFilter.removed:
-        return widget.result.files
+        return searchFilteredFiles
             .where((file) => file.status == FileComparisonStatus.removed)
             .toList();
       case ComparisonFilter.unchanged:
-        return widget.result.files
+        return searchFilteredFiles
             .where((file) => file.status == FileComparisonStatus.unchanged)
             .toList();
     }
@@ -68,7 +79,9 @@ class _ComparisonResultsState extends State<ComparisonResults> {
           child: _filteredFiles.isEmpty
               ? Center(
                   child: Text(
-                    'No ${_selectedFilter.name} files found.',
+                    widget.searchQuery.trim().isNotEmpty
+                        ? 'No files match your search.'
+                        : 'No ${_selectedFilter.name} files found.',
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 )

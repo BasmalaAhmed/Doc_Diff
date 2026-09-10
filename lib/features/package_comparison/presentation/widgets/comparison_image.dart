@@ -77,16 +77,24 @@ class _ComparisonImageState extends State<ComparisonImage> {
                                 );
 
                             final Matrix4 newMatrix = currentMatrix.clone()
-                              ..translate(
+                              ..translateByDouble(
                                 sceneFocalPoint.dx,
                                 sceneFocalPoint.dy,
+                                0,
+                                1,
                               )
-                              ..scale(effectiveScaleFactor)
-                              ..translate(
+                              ..scaleByDouble(
+                                effectiveScaleFactor,
+                                effectiveScaleFactor,
+                                effectiveScaleFactor,
+                                1,
+                              )
+                              ..translateByDouble(
                                 -sceneFocalPoint.dx,
                                 -sceneFocalPoint.dy,
+                                0,
+                                1,
                               );
-print('current scale: $currentScale, new scale: $clampedScale');
 
                             _transformationController.value = newMatrix;
                           },

@@ -86,9 +86,6 @@ class _ComparisonImageState extends State<ComparisonImage> {
                                 -sceneFocalPoint.dx,
                                 -sceneFocalPoint.dy,
                               );
-
-                              print('mouse local position: $focalPoint');
-print('scene focal point: $sceneFocalPoint');
 print('current scale: $currentScale, new scale: $clampedScale');
 
                             _transformationController.value = newMatrix;

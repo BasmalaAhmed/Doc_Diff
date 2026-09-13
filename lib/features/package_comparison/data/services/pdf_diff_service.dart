@@ -20,55 +20,87 @@ class PdfDiffService {
 
     final updatedPages = await _pdfRenderService.renderPages(updatedPdfPath);
 
-    final pageCount = originalPages.length > updatedPages.length
-        ? originalPages.length
-        : updatedPages.length;
+    final matches = _matchPages(
+      originalPages: originalPages,
+      updatedPages: updatedPages,
+    );
+
+    final updatedToOriginal = _getUpdatedToOriginalIndexes(matches);
 
     final pages = <PdfPageDiff>[];
+    var originalIndex = 0;
 
-    for (var i = 0; i < pageCount; i++) {
-      final hasOriginalPage = i < originalPages.length;
-      final hasUpdatedPage = i < updatedPages.length;
+    for (
+      var updatedIndex = 0;
+      updatedIndex < updatedPages.length;
+      updatedIndex++
+    ) {
+      final matchedOriginalIndex = updatedToOriginal[updatedIndex];
 
-      if (hasOriginalPage && hasUpdatedPage) {
-        final diff = _comparePage(
-          originalPage: originalPages[i],
-          updatedPage: updatedPages[i],
-        );
-
+      while (originalIndex < (matchedOriginalIndex ?? originalPages.length) &&
+          matches[originalIndex] == null) {
         pages.add(
           PdfPageDiff(
-            pageNumber: i + 1,
-            originalPage: originalPages[i],
-            updatedPage: updatedPages[i],
-            diffPage: diff.diffImage,
-            diffPixels: diff.diffPixels,
-            status: diff.status,
+            pageNumber: originalIndex + 1,
+            originalPage: originalPages[originalIndex],
+            updatedPage: null,
+            diffPage: null,
+            diffPixels: 0,
+            status: PdfPageDiffStatus.removed,
           ),
         );
-      } else if (hasOriginalPage) {
-        pages.add(
-        PdfPageDiff(
-          pageNumber: i + 1,
-          originalPage: originalPages[i],
-          updatedPage: null,
-          diffPage: null,
-          diffPixels: 0,
-          status: PdfPageDiffStatus.removed,
-        ),
-      );
-      } else {
-        pages.add(
-        PdfPageDiff(
-          pageNumber: i + 1,
-          originalPage: null,
-          updatedPage: updatedPages[i],
-          diffPage: null,
-          diffPixels: 0,
-          status: PdfPageDiffStatus.added,
-        ),
-      );
+
+        originalIndex++;
       }
+
+      if (matchedOriginalIndex == null) {
+        pages.add(
+          PdfPageDiff(
+            pageNumber: updatedIndex + 1,
+            originalPage: null,
+            updatedPage: updatedPages[updatedIndex],
+            diffPage: null,
+            diffPixels: 0,
+            status: PdfPageDiffStatus.added,
+          ),
+        );
+
+        continue;
+      }
+
+      final diff = _comparePage(
+        originalPage: originalPages[matchedOriginalIndex],
+        updatedPage: updatedPages[updatedIndex],
+      );
+
+      pages.add(
+        PdfPageDiff(
+          pageNumber: updatedIndex + 1,
+          originalPage: originalPages[matchedOriginalIndex],
+          updatedPage: updatedPages[updatedIndex],
+          diffPage: diff.diffImage,
+          diffPixels: diff.diffPixels,
+          status: diff.status,
+        ),
+      );
+
+      originalIndex = matchedOriginalIndex + 1;
+    }
+
+    while (originalIndex < originalPages.length) {
+      if (matches[originalIndex] == null) {
+        pages.add(
+          PdfPageDiff(
+            pageNumber: originalIndex + 1,
+            originalPage: originalPages[originalIndex],
+            updatedPage: null,
+            diffPage: null,
+            diffPixels: 0,
+            status: PdfPageDiffStatus.removed,
+          ),
+        );
+      }
+      originalIndex++;
     }
 
     return PdfDiffResult(pages: pages);
@@ -113,6 +145,154 @@ class PdfDiffService {
           ? PdfPageDiffStatus.changed
           : PdfPageDiffStatus.unchanged,
     );
+  }
+
+  double _calculateSimilarity({
+    required Uint8List originalPage,
+    required Uint8List updatedPage,
+  }) {
+    final originalImage = img
+        .decodeImage(originalPage)
+        ?.convert(numChannels: 4);
+
+    final updatedImage = img.decodeImage(updatedPage)?.convert(numChannels: 4);
+
+    if (originalImage == null || updatedImage == null) {
+      return 0.0;
+    }
+
+    if (originalImage.width != updatedImage.width ||
+        originalImage.height != updatedImage.height) {
+      return 0.0;
+    }
+
+    final diffImage = img.Image(
+      width: originalImage.width,
+      height: originalImage.height,
+      numChannels: 4,
+    );
+
+    final diffPixels = pixelmatch(
+      originalImage.getBytes(),
+      updatedImage.getBytes(),
+      diffImage.getBytes(),
+      originalImage.width,
+      originalImage.height,
+      {'threshold': 0.1},
+    );
+
+    final totalPixels = originalImage.width * originalImage.height;
+
+    return 1 - (diffPixels / totalPixels);
+  }
+
+  List<int?> _matchPages({
+    required List<Uint8List> originalPages,
+    required List<Uint8List> updatedPages,
+  }) {
+    final similarities = List.generate(
+      originalPages.length,
+      (_) => List<double>.filled(updatedPages.length, 0.0),
+    );
+
+    for (
+      var originalIndex = 0;
+      originalIndex < originalPages.length;
+      originalIndex++
+    ) {
+      for (
+        var updatedIndex = 0;
+        updatedIndex < updatedPages.length;
+        updatedIndex++
+      ) {
+        similarities[originalIndex][updatedIndex] = _calculateSimilarity(
+          originalPage: originalPages[originalIndex],
+          updatedPage: updatedPages[updatedIndex],
+        );
+      }
+    }
+
+    final matches = List<int?>.filled(originalPages.length, null);
+
+    final scores = List.generate(
+      originalPages.length + 1,
+      (_) => List<double>.filled(updatedPages.length + 1, 0.0),
+    );
+
+    const similarityThreshold = 0.8;
+    const skipPenalty = 0.2;
+
+    for (
+      var originalIndex = 1;
+      originalIndex <= originalPages.length;
+      originalIndex++
+    ) {
+      for (
+        var updatedIndex = 1;
+        updatedIndex <= updatedPages.length;
+        updatedIndex++
+      ) {
+        final similarity = similarities[originalIndex - 1][updatedIndex - 1];
+
+        final matchScore = similarity >= similarityThreshold
+            ? scores[originalIndex - 1][updatedIndex - 1] + similarity
+            : double.negativeInfinity;
+
+        final skipOriginalScore =
+            scores[originalIndex - 1][updatedIndex] - skipPenalty;
+        final skipUpdatedScore =
+            scores[originalIndex][updatedIndex - 1] - skipPenalty;
+
+        scores[originalIndex][updatedIndex] = [
+          matchScore,
+          skipOriginalScore,
+          skipUpdatedScore,
+        ].reduce((a, b) => a > b ? a : b);
+      }
+    }
+
+    var originalIndex = originalPages.length;
+    var updatedIndex = updatedPages.length;
+
+    while (originalIndex > 0 && updatedIndex > 0) {
+      final similarity = similarities[originalIndex - 1][updatedIndex - 1];
+
+      final matchScore = similarity >= similarityThreshold
+          ? scores[originalIndex - 1][updatedIndex - 1] + similarity
+          : double.negativeInfinity;
+
+      if (scores[originalIndex][updatedIndex] == matchScore) {
+        matches[originalIndex - 1] = updatedIndex - 1;
+
+        originalIndex--;
+        updatedIndex--;
+      } else if (scores[originalIndex][updatedIndex] ==
+          scores[originalIndex - 1][updatedIndex] - skipPenalty) {
+        originalIndex--;
+      } else {
+        updatedIndex--;
+      }
+    }
+
+    return matches;
+  }
+
+
+  Map<int, int> _getUpdatedToOriginalIndexes(List<int?> matches) {
+    final mapping = <int, int>{};
+
+    for (
+      var originalIndex = 0;
+      originalIndex < matches.length;
+      originalIndex++
+    ) {
+      final updatedIndex = matches[originalIndex];
+      if (updatedIndex != null) {
+        mapping[updatedIndex] = originalIndex;
+      }
+    }
+
+    return mapping;
   }
 }
 

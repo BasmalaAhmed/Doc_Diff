@@ -37,6 +37,8 @@ dependencies:
   get_it: ^9.2.1
   image: ^4.9.2
   logger: ^2.8.0
+  mocktail: ^1.0.5
+  path: ^1.9.1
   pdfx: ^2.11.0
   pixelmatch: ^1.1.2
 

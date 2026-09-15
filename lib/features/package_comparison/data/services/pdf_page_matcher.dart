@@ -12,7 +12,6 @@ class PdfPageMatcher {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-
     final originalImage = _imageDecoderService.decode(originalPage);
 
     final updatedImage = _imageDecoderService.decode(updatedPage);
@@ -40,9 +39,11 @@ class PdfPageMatcher {
         final updatedBrightness =
             (updatedPixel.r + updatedPixel.g + updatedPixel.b) / 3;
 
-        final originalHasContent = originalBrightness < DiffConfig.contentThreshold;
+        final originalHasContent =
+            originalBrightness < DiffConfig.contentThreshold;
 
-        final updatedHasContent = updatedBrightness < DiffConfig.contentThreshold;
+        final updatedHasContent =
+            updatedBrightness < DiffConfig.contentThreshold;
 
         if (originalHasContent || updatedHasContent) {
           contentPixels++;
@@ -67,6 +68,29 @@ class PdfPageMatcher {
     required List<Uint8List> originalPages,
     required List<Uint8List> updatedPages,
   }) {
+    final similarities = _buildSimilarityMatrix(
+      originalPages: originalPages,
+      updatedPages: updatedPages,
+    );
+
+    final scores = _computeAlignmentScores(
+      similarities: similarities,
+      originalCount: originalPages.length,
+      updatedCount: updatedPages.length,
+    );
+
+    return _backtrackMatches(
+      similarities: similarities,
+      scores: scores,
+      originalCount: originalPages.length,
+      updatedCount: updatedPages.length,
+    );
+  }
+
+  List<List<double>> _buildSimilarityMatrix({
+    required List<Uint8List> originalPages,
+    required List<Uint8List> updatedPages,
+  }) {
     final similarities = List.generate(
       originalPages.length,
       (_) => List<double>.filled(updatedPages.length, 0.0),
@@ -88,24 +112,25 @@ class PdfPageMatcher {
         );
       }
     }
+    return similarities;
+  }
 
-    final matches = List<int?>.filled(originalPages.length, null);
-
+  List<List<double>> _computeAlignmentScores({
+    required List<List<double>> similarities,
+    required int originalCount,
+    required int updatedCount,
+  }) {
     final scores = List.generate(
-      originalPages.length + 1,
-      (_) => List<double>.filled(updatedPages.length + 1, 0.0),
+      originalCount + 1,
+      (_) => List<double>.filled(updatedCount + 1, 0.0),
     );
 
     for (
       var originalIndex = 1;
-      originalIndex <= originalPages.length;
+      originalIndex <= originalCount;
       originalIndex++
     ) {
-      for (
-        var updatedIndex = 1;
-        updatedIndex <= updatedPages.length;
-        updatedIndex++
-      ) {
+      for (var updatedIndex = 1; updatedIndex <= updatedCount; updatedIndex++) {
         final similarity = similarities[originalIndex - 1][updatedIndex - 1];
 
         final matchScore = similarity >= DiffConfig.similarityThreshold
@@ -124,9 +149,19 @@ class PdfPageMatcher {
         ].reduce((a, b) => a > b ? a : b);
       }
     }
+    return scores;
+  }
 
-    var originalIndex = originalPages.length;
-    var updatedIndex = updatedPages.length;
+  List<int?> _backtrackMatches({
+    required List<List<double>> similarities,
+    required List<List<double>> scores,
+    required int originalCount,
+    required int updatedCount,
+  }) {
+    final matches = List<int?>.filled(originalCount, null);
+
+    var originalIndex = originalCount;
+    var updatedIndex = updatedCount;
 
     while (originalIndex > 0 && updatedIndex > 0) {
       final similarity = similarities[originalIndex - 1][updatedIndex - 1];

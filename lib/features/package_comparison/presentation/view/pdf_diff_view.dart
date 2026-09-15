@@ -4,6 +4,7 @@ import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff.d
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff_status.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_filter.dart';
 import 'package:doc_diff/features/package_comparison/data/services/pdf_diff_service.dart';
+import 'package:doc_diff/features/package_comparison/data/services/pdf_page_matcher.dart';
 import 'package:doc_diff/features/package_comparison/presentation/manager/pdf_diff_cubit/pdf_diff_cubit.dart';
 import 'package:doc_diff/features/package_comparison/presentation/manager/pdf_diff_cubit/pdf_diff_state.dart';
 import 'package:doc_diff/features/package_comparison/presentation/widgets/pdf_diff_summary.dart';
@@ -54,10 +55,11 @@ class _PdfDiffViewState extends State<PdfDiffView> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          PdfDiffCubit(PdfDiffService(PdfRenderService()))..comparePdfs(
-            originalPdfPath: widget.originalPdfPath,
-            updatedPdfPath: widget.updatedPdfPath,
-          ),
+          PdfDiffCubit(PdfDiffService(PdfRenderService(), PdfPageMatcher()))
+            ..comparePdfs(
+              originalPdfPath: widget.originalPdfPath,
+              updatedPdfPath: widget.updatedPdfPath,
+            ),
       child: Scaffold(
         appBar: AppBar(title: const Text('PDF Comparison')),
         body: BlocBuilder<PdfDiffCubit, PdfDiffState>(
@@ -113,8 +115,10 @@ class _PdfDiffViewState extends State<PdfDiffView> {
                     if (filteredPages.isEmpty)
                       Expanded(
                         child: Center(
-                          child: Text( 'No ${_selectedFilter.name} files found.',
-                    style: Theme.of(context).textTheme.bodyLarge,),
+                          child: Text(
+                            'No ${_selectedFilter.name} files found.',
+                            style: Theme.of(context).textTheme.bodyLarge,
+                          ),
                         ),
                       )
                     else

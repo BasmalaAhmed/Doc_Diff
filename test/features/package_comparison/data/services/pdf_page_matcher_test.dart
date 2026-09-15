@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:doc_diff/core/services/image_decoder_service.dart';
 import 'package:doc_diff/features/package_comparison/data/services/pdf_page_matcher.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:image/image.dart' as img;
@@ -23,7 +24,7 @@ Uint8List createPage({required int contentX}) {
 
 void main() {
   test('Matches unchanged pages even when a page is removed', () {
-    final matcher = PdfPageMatcher();
+    final matcher = PdfPageMatcher(ImageDecoderService());
 
     final originalPages = [
       createPage(contentX: 1),

@@ -23,49 +23,46 @@ class ComparisonService {
 
     final allPaths = {...originalMap.keys, ...updatedMap.keys};
 
-    final comparisons = <FileComparison>[];
+    final comparisons = await Future.wait(
+      allPaths.map((relativePath) async {
+        final originalFile = originalMap[relativePath];
+        final updatedFile = updatedMap[relativePath];
 
-    for (final relativePath in allPaths) {
-      final originalFile = originalMap[relativePath];
-      final updatedFile = updatedMap[relativePath];
+        if (originalFile != null && updatedFile != null) {
+          final hashes = await Future.wait([
+            _hashService.calculateHash(originalFile.path),
+            _hashService.calculateHash(updatedFile.path),
+          ]);
 
-      if (originalFile != null && updatedFile != null) {
-        final originalHash = await _hashService.calculateHash(
-          originalFile.path,
-        );
+          final originalHash = hashes[0];
 
-        final updatedHash = await _hashService.calculateHash(updatedFile.path);
+          final updatedHash = hashes[1];
 
-        final status = originalHash == updatedHash
-            ? FileComparisonStatus.unchanged
-            : FileComparisonStatus.modified;
+          final status = originalHash == updatedHash
+              ? FileComparisonStatus.unchanged
+              : FileComparisonStatus.modified;
 
-        comparisons.add(
-          FileComparison(
+          return FileComparison(
             relativePath: relativePath,
             status: status,
             originalFile: originalFile,
             updatedFile: updatedFile,
-          ),
-        );
-      } else if (originalFile != null) {
-        comparisons.add(
-          FileComparison(
+          );
+        } else if (originalFile != null) {
+          return FileComparison(
             relativePath: relativePath,
             status: FileComparisonStatus.removed,
             originalFile: originalFile,
-          ),
-        );
-      } else {
-        comparisons.add(
-          FileComparison(
+          );
+        } else {
+          return FileComparison(
             relativePath: relativePath,
             status: FileComparisonStatus.added,
             updatedFile: updatedFile,
-          ),
-        );
-      }
-    }
+          );
+        }
+      }),
+    );
     return ComparisonResult(files: comparisons);
   }
 }

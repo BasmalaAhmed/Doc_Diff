@@ -1,10 +1,11 @@
+import 'package:doc_diff/core/utils/app_logger.dart';
 import 'package:doc_diff/features/package_comparison/data/services/comparison_service.dart';
 import 'package:doc_diff/features/package_comparison/data/services/package_scanner.dart';
 import 'package:doc_diff/features/package_comparison/presentation/manager/comparison_cubit/comparison_state.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class ComparisonCubit extends Cubit<ComparisonState> {
-  ComparisonCubit(this._packageScanner, this._comparisonService, )
+  ComparisonCubit(this._packageScanner, this._comparisonService)
     : super(ComparisonInitial());
 
   final ComparisonService _comparisonService;
@@ -15,6 +16,8 @@ class ComparisonCubit extends Cubit<ComparisonState> {
     required String updatedPackagePath,
   }) async {
     emit(ComparisonLoading());
+
+    appLogger.i('Starting package comparison');
 
     try {
       final originalFiles = await _packageScanner.scan(originalPackagePath);
@@ -27,15 +30,15 @@ class ComparisonCubit extends Cubit<ComparisonState> {
       );
 
       emit(ComparisonSuccess(result));
-
-
-    } catch (e) {
-
+    } catch (e, stackTrace) {
+      appLogger.e(
+        'Failed to compare packages',
+        error: e,
+        stackTrace: stackTrace,
+      );
       emit(
         ComparisonFailure('Something went wrong while comparing the packages.'),
       );
-
     }
   }
-
 }

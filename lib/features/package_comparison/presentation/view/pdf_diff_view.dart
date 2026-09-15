@@ -1,11 +1,8 @@
-import 'package:doc_diff/core/services/image_decoder_service.dart';
-import 'package:doc_diff/core/services/pdf_render_service.dart';
+import 'package:doc_diff/core/service_locator.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_diff_result.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff_status.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_filter.dart';
-import 'package:doc_diff/features/package_comparison/data/services/pdf_diff_service.dart';
-import 'package:doc_diff/features/package_comparison/data/services/pdf_page_matcher.dart';
 import 'package:doc_diff/features/package_comparison/presentation/manager/pdf_diff_cubit/pdf_diff_cubit.dart';
 import 'package:doc_diff/features/package_comparison/presentation/manager/pdf_diff_cubit/pdf_diff_state.dart';
 import 'package:doc_diff/features/package_comparison/presentation/widgets/pdf_diff_summary.dart';
@@ -55,17 +52,11 @@ class _PdfDiffViewState extends State<PdfDiffView> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) =>
-          PdfDiffCubit(
-            PdfDiffService(
-              PdfRenderService(),
-              PdfPageMatcher(ImageDecoderService()),
-              ImageDecoderService(),
-            ),
-          )..comparePdfs(
-            originalPdfPath: widget.originalPdfPath,
-            updatedPdfPath: widget.updatedPdfPath,
-          ),
+      create: (context) => PdfDiffCubit(sl())
+        ..comparePdfs(
+          originalPdfPath: widget.originalPdfPath,
+          updatedPdfPath: widget.updatedPdfPath,
+        ),
       child: Scaffold(
         appBar: AppBar(title: const Text('PDF Comparison')),
         body: BlocBuilder<PdfDiffCubit, PdfDiffState>(

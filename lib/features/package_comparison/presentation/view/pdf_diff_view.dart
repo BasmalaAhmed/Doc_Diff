@@ -131,9 +131,9 @@ class _PdfDiffViewState extends State<PdfDiffView> {
                       Expanded(
                         child: ListView.builder(
                           padding: const EdgeInsets.all(16),
-                          itemCount: _getFilteredPages(result).length,
+                          itemCount: filteredPages.length,
                           itemBuilder: (context, index) {
-                            final page = _getFilteredPages(result)[index];
+                            final page = filteredPages[index];
 
                             return Card(
                               margin: const EdgeInsets.only(bottom: 16),

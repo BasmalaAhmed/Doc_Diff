@@ -19,23 +19,13 @@ class _HomeViewState extends State<HomeView> {
   String? _originalPackagePath;
   String? _updatedPackagePath;
 
-  Future<void> _pickOriginalPackage() async {
+  Future<void> _pickPackage(void Function(String path) onPicked) async {
     final path = await _filePickerService.pickDirectory();
 
     if (path == null) return;
 
     setState(() {
-      _originalPackagePath = path;
-    });
-  }
-
-  Future<void> _pickUpdatedPackage() async {
-    final path = await _filePickerService.pickDirectory();
-
-    if (path == null) return;
-
-    setState(() {
-      _updatedPackagePath = path;
+      onPicked(path);
     });
   }
 
@@ -74,7 +64,9 @@ class _HomeViewState extends State<HomeView> {
                           subtitle: 'Select the original package',
                           icon: Icons.folder_outlined,
                           selectedPath: _originalPackagePath,
-                          onSelect: _pickOriginalPackage,
+                          onSelect: () => _pickPackage(
+                            (path) => _originalPackagePath = path,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 24),
@@ -84,7 +76,9 @@ class _HomeViewState extends State<HomeView> {
                           subtitle: 'Select the updated package',
                           icon: Icons.folder_copy_outlined,
                           selectedPath: _updatedPackagePath,
-                          onSelect: _pickUpdatedPackage,
+                          onSelect: () => _pickPackage(
+                            (path) => _updatedPackagePath = path,
+                          ),
                         ),
                       ),
                     ],

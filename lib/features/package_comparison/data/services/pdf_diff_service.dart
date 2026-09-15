@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:doc_diff/core/services/image_decoder_service.dart';
 import 'package:doc_diff/core/services/pdf_render_service.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_diff_result.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff.dart';
@@ -11,8 +12,9 @@ import 'package:pixelmatch/pixelmatch.dart';
 class PdfDiffService {
   final PdfRenderService _pdfRenderService;
   final PdfPageMatcher _pdfPageMatcher;
+  final ImageDecoderService _imageDecoderService;
 
-  PdfDiffService(this._pdfRenderService, this._pdfPageMatcher);
+  PdfDiffService(this._pdfRenderService, this._pdfPageMatcher, this._imageDecoderService);
 
   Future<PdfDiffResult> compare({
     required String originalPdfPath,
@@ -114,10 +116,8 @@ class PdfDiffService {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-    final originalImage = img
-        .decodeImage(originalPage)
-        ?.convert(numChannels: 4);
-    final updatedImage = img.decodeImage(updatedPage)?.convert(numChannels: 4);
+    final originalImage = _imageDecoderService.decode(originalPage);
+    final updatedImage = _imageDecoderService.decode(updatedPage);
 
     if (originalImage == null || updatedImage == null) {
       return _PageComparison(

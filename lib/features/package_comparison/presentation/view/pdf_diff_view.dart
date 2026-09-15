@@ -1,3 +1,4 @@
+import 'package:doc_diff/core/services/image_decoder_service.dart';
 import 'package:doc_diff/core/services/pdf_render_service.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_diff_result.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_page_diff.dart';
@@ -55,11 +56,16 @@ class _PdfDiffViewState extends State<PdfDiffView> {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) =>
-          PdfDiffCubit(PdfDiffService(PdfRenderService(), PdfPageMatcher()))
-            ..comparePdfs(
-              originalPdfPath: widget.originalPdfPath,
-              updatedPdfPath: widget.updatedPdfPath,
+          PdfDiffCubit(
+            PdfDiffService(
+              PdfRenderService(),
+              PdfPageMatcher(ImageDecoderService()),
+              ImageDecoderService(),
             ),
+          )..comparePdfs(
+            originalPdfPath: widget.originalPdfPath,
+            updatedPdfPath: widget.updatedPdfPath,
+          ),
       child: Scaffold(
         appBar: AppBar(title: const Text('PDF Comparison')),
         body: BlocBuilder<PdfDiffCubit, PdfDiffState>(

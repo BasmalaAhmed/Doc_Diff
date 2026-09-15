@@ -1,22 +1,22 @@
 import 'dart:typed_data';
 
-import 'package:image/image.dart' as img;
+import 'package:doc_diff/core/services/image_decoder_service.dart';
 
 class PdfPageMatcher {
-  
+  final ImageDecoderService _imageDecoderService;
+
+  PdfPageMatcher(this._imageDecoderService);
+
   double calculateSimilarity({
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-
     const contentThreshold = 245;
     const diffThreshold = 20;
 
-    final originalImage = img
-        .decodeImage(originalPage)
-        ?.convert(numChannels: 4);
+    final originalImage = _imageDecoderService.decode(originalPage);
 
-    final updatedImage = img.decodeImage(updatedPage)?.convert(numChannels: 4);
+    final updatedImage = _imageDecoderService.decode(updatedPage);
 
     if (originalImage == null || updatedImage == null) {
       return 0.0;
@@ -30,22 +30,24 @@ class PdfPageMatcher {
     var contentPixels = 0;
     var diffContentPixels = 0;
 
-    for (var y = 0; y < originalImage.height; y++){
+    for (var y = 0; y < originalImage.height; y++) {
       for (var x = 0; x < originalImage.width; x++) {
         final originalPixel = originalImage.getPixel(x, y);
         final updatedPixel = updatedImage.getPixel(x, y);
 
-        final originalBrightness = (originalPixel.r + originalPixel.g + originalPixel.b) / 3;
+        final originalBrightness =
+            (originalPixel.r + originalPixel.g + originalPixel.b) / 3;
 
-        final updatedBrightness = (updatedPixel.r + updatedPixel.g + updatedPixel.b) / 3;
+        final updatedBrightness =
+            (updatedPixel.r + updatedPixel.g + updatedPixel.b) / 3;
 
         final originalHasContent = originalBrightness < contentThreshold;
 
         final updatedHasContent = updatedBrightness < contentThreshold;
 
-        if(originalHasContent || updatedHasContent) {
+        if (originalHasContent || updatedHasContent) {
           contentPixels++;
-          
+
           final pixelDiff = (originalBrightness - updatedBrightness).abs();
 
           if (pixelDiff > diffThreshold) {
@@ -55,7 +57,7 @@ class PdfPageMatcher {
       }
     }
 
-    if(contentPixels == 0){
+    if (contentPixels == 0) {
       return 1.0;
     }
 

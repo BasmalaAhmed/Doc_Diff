@@ -39,9 +39,25 @@ class _ComparisonImageState extends State<ComparisonImage> {
             borderRadius: BorderRadius.circular(8),
           ),
           child: widget.image == null
-              ? const SizedBox(
-                  height: 200,
-                  child: Center(child: Text('Not Available')),
+              ? SizedBox(
+                  height: 400,
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.description_outlined,
+                          size: 40,
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'No Page Available',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               : SizedBox(
                   height: 400,

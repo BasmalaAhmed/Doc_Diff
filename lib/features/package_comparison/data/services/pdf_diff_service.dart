@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:doc_diff/core/config/diff_config.dart';
 import 'package:doc_diff/core/services/image_decoder_service.dart';
 import 'package:doc_diff/core/services/pdf_render_service.dart';
 import 'package:doc_diff/features/package_comparison/data/models/pdf_diff_result.dart';
@@ -139,7 +140,7 @@ class PdfDiffService {
       diffImage.getBytes(),
       originalImage.width,
       originalImage.height,
-      {'threshold': 0.1},
+      {'threshold': DiffConfig.pixelmatchThreshold},
     );
 
     return _PageComparison(

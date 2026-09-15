@@ -1,9 +1,10 @@
 import 'dart:typed_data';
 
+import 'package:doc_diff/core/config/diff_config.dart';
 import 'package:pdfx/pdfx.dart';
 
 class PdfRenderService {
-  Future<List<Uint8List>> renderPages(String pdfPath,{double scale = 2.0}) async {
+  Future<List<Uint8List>> renderPages(String pdfPath,{double scale = DiffConfig.renderScale}) async {
     final document = await PdfDocument.openFile(pdfPath);
 
     try {

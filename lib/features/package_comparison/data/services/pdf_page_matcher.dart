@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:doc_diff/core/config/diff_config.dart';
 import 'package:doc_diff/core/services/image_decoder_service.dart';
 
 class PdfPageMatcher {
@@ -11,8 +12,6 @@ class PdfPageMatcher {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
-    const contentThreshold = 245;
-    const diffThreshold = 20;
 
     final originalImage = _imageDecoderService.decode(originalPage);
 
@@ -41,16 +40,16 @@ class PdfPageMatcher {
         final updatedBrightness =
             (updatedPixel.r + updatedPixel.g + updatedPixel.b) / 3;
 
-        final originalHasContent = originalBrightness < contentThreshold;
+        final originalHasContent = originalBrightness < DiffConfig.contentThreshold;
 
-        final updatedHasContent = updatedBrightness < contentThreshold;
+        final updatedHasContent = updatedBrightness < DiffConfig.contentThreshold;
 
         if (originalHasContent || updatedHasContent) {
           contentPixels++;
 
           final pixelDiff = (originalBrightness - updatedBrightness).abs();
 
-          if (pixelDiff > diffThreshold) {
+          if (pixelDiff > DiffConfig.diffThreshold) {
             diffContentPixels++;
           }
         }
@@ -97,9 +96,6 @@ class PdfPageMatcher {
       (_) => List<double>.filled(updatedPages.length + 1, 0.0),
     );
 
-    const similarityThreshold = 0.8;
-    const skipPenalty = 0.2;
-
     for (
       var originalIndex = 1;
       originalIndex <= originalPages.length;
@@ -112,14 +108,14 @@ class PdfPageMatcher {
       ) {
         final similarity = similarities[originalIndex - 1][updatedIndex - 1];
 
-        final matchScore = similarity >= similarityThreshold
+        final matchScore = similarity >= DiffConfig.similarityThreshold
             ? scores[originalIndex - 1][updatedIndex - 1] + similarity
             : double.negativeInfinity;
 
         final skipOriginalScore =
-            scores[originalIndex - 1][updatedIndex] - skipPenalty;
+            scores[originalIndex - 1][updatedIndex] - DiffConfig.skipPenalty;
         final skipUpdatedScore =
-            scores[originalIndex][updatedIndex - 1] - skipPenalty;
+            scores[originalIndex][updatedIndex - 1] - DiffConfig.skipPenalty;
 
         scores[originalIndex][updatedIndex] = [
           matchScore,
@@ -135,7 +131,7 @@ class PdfPageMatcher {
     while (originalIndex > 0 && updatedIndex > 0) {
       final similarity = similarities[originalIndex - 1][updatedIndex - 1];
 
-      final matchScore = similarity >= similarityThreshold
+      final matchScore = similarity >= DiffConfig.similarityThreshold
           ? scores[originalIndex - 1][updatedIndex - 1] + similarity
           : double.negativeInfinity;
 
@@ -145,7 +141,7 @@ class PdfPageMatcher {
         originalIndex--;
         updatedIndex--;
       } else if (scores[originalIndex][updatedIndex] ==
-          scores[originalIndex - 1][updatedIndex] - skipPenalty) {
+          scores[originalIndex - 1][updatedIndex] - DiffConfig.skipPenalty) {
         originalIndex--;
       } else {
         updatedIndex--;

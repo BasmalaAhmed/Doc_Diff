@@ -151,6 +151,10 @@ class PdfDiffService {
     required Uint8List originalPage,
     required Uint8List updatedPage,
   }) {
+
+    const contentThreshold = 245;
+    const diffThreshold = 20;
+
     final originalImage = img
         .decodeImage(originalPage)
         ?.convert(numChannels: 4);
@@ -166,24 +170,39 @@ class PdfDiffService {
       return 0.0;
     }
 
-    final diffImage = img.Image(
-      width: originalImage.width,
-      height: originalImage.height,
-      numChannels: 4,
-    );
+    var contentPixels = 0;
+    var diffContentPixels = 0;
 
-    final diffPixels = pixelmatch(
-      originalImage.getBytes(),
-      updatedImage.getBytes(),
-      diffImage.getBytes(),
-      originalImage.width,
-      originalImage.height,
-      {'threshold': 0.1},
-    );
+    for (var y = 0; y < originalImage.height; y++){
+      for (var x = 0; x < originalImage.width; x++) {
+        final originalPixel = originalImage.getPixel(x, y);
+        final updatedPixel = updatedImage.getPixel(x, y);
 
-    final totalPixels = originalImage.width * originalImage.height;
+        final originalBrightness = (originalPixel.r + originalPixel.g + originalPixel.b) / 3;
 
-    return 1 - (diffPixels / totalPixels);
+        final updatedBrightness = (updatedPixel.r + updatedPixel.g + updatedPixel.b) / 3;
+
+        final originalHasContent = originalBrightness < contentThreshold;
+
+        final updatedHasContent = updatedBrightness < contentThreshold;
+
+        if(originalHasContent || updatedHasContent) {
+          contentPixels++;
+          
+          final pixelDiff = (originalBrightness - updatedBrightness).abs();
+
+          if (pixelDiff > diffThreshold) {
+            diffContentPixels++;
+          }
+        }
+      }
+    }
+
+    if(contentPixels == 0){
+      return 1.0;
+    }
+
+    return 1 - (diffContentPixels / contentPixels);
   }
 
   List<int?> _matchPages({

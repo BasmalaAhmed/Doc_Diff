@@ -1,3 +1,4 @@
+import 'package:doc_diff_app/features/comparison/presentation/widgets/home_header.dart';
 import 'package:flutter/material.dart';
 
 class DesktopHomeLayout extends StatelessWidget {
@@ -5,6 +6,10 @@ class DesktopHomeLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Placeholder();
+    return const Column(
+      children: [
+        HomeHeader(),
+      ],
+    );
   }
 }

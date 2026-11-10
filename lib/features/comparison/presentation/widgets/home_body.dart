@@ -1,3 +1,4 @@
+import 'package:doc_diff_app/features/comparison/presentation/widgets/start_comparison_section.dart';
 import 'package:doc_diff_app/features/comparison/presentation/widgets/upload_cards.dart';
 import 'package:flutter/material.dart';
 
@@ -37,10 +38,12 @@ class HomeBody extends StatelessWidget {
               ),
               SizedBox(height: 38),
               UploadCards(),
+              SizedBox(height: 40),
+              StartComparisonSection(canCompare: false, onStart: () {}),
             ],
           ),
         );
-      }
+      },
     );
   }
 }

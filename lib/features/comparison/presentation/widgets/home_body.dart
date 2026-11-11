@@ -1,9 +1,45 @@
 import 'package:doc_diff_app/features/comparison/presentation/widgets/start_comparison_section.dart';
 import 'package:doc_diff_app/features/comparison/presentation/widgets/upload_cards.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-class HomeBody extends StatelessWidget {
+class HomeBody extends StatefulWidget {
   const HomeBody({super.key});
+
+  @override
+  State<HomeBody> createState() => _HomeBodyState();
+}
+
+class _HomeBodyState extends State<HomeBody> {
+  PlatformFile? originalFile;
+  PlatformFile? updatedFile;
+
+  Future<void> pickPdf({required bool isOriginal}) async {
+    final file = await FilePicker.pickFile(
+      type: FileType.custom,
+      allowedExtensions: const ['pdf'],
+    );
+
+    if (!mounted || file == null) return;
+
+    final sizeInBytes = file.lengthSync() ?? await file.length();
+    if (sizeInBytes == null) return;
+
+    if (sizeInBytes > 50 * 1024 * 1024) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('The file size must not exceed 50 MB.')),
+      );
+      return;
+    }
+
+    setState(() {
+      if (isOriginal) {
+        originalFile = file;
+      } else {
+        updatedFile = file;
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,9 +73,19 @@ class HomeBody extends StatelessWidget {
                 textAlign: TextAlign.center,
               ),
               SizedBox(height: 38),
-              UploadCards(),
+              UploadCards(
+                originalFile: originalFile,
+                updatedFile: updatedFile,
+                onPickOriginal: () => pickPdf(isOriginal: true),
+                onPickUpdated: () => pickPdf(isOriginal: false),
+                onRemoveOriginal: () => setState(() => originalFile = null),
+                onRemoveUpdated: () => setState(() => updatedFile = null),
+              ),
               SizedBox(height: 40),
-              StartComparisonSection(canCompare: false, onStart: () {}),
+              StartComparisonSection(
+                canCompare: originalFile != null && updatedFile != null,
+                onStart: () {},
+              ),
             ],
           ),
         );

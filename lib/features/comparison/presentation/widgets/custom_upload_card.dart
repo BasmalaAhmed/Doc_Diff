@@ -2,22 +2,33 @@ import 'package:doc_diff_app/features/comparison/presentation/widgets/pdf_upload
 import 'package:flutter/material.dart';
 
 class CustomUploadCard extends StatelessWidget {
-  const CustomUploadCard({super.key, required this.badge, required this.title});
+  const CustomUploadCard({
+    super.key,
+    required this.badge,
+    required this.title,
+    this.fileName,
+    this.fileSize,
+    required this.onChoose,
+    required this.onRemove,
+  });
 
   final String badge, title;
+  final String? fileName, fileSize;
+  final VoidCallback onChoose, onRemove;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 336),
       padding: EdgeInsets.all(30),
       decoration: BoxDecoration(
-        color: Color(0XFFFFFFFF),
+        color: Colors.white,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: Color(0XFFDDE2E6)),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
@@ -52,7 +63,12 @@ class CustomUploadCard extends StatelessWidget {
             ],
           ),
           SizedBox(height: 18),
-          PdfUploadArea(),
+          PdfUploadArea(
+            fileName: fileName,
+            fileSize: fileSize,
+            onChoose: onChoose,
+            onRemove: onRemove,
+          ),
         ],
       ),
     );
